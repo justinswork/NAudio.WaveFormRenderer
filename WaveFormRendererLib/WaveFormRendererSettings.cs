@@ -13,6 +13,7 @@ namespace NAudio.WaveFormRenderer
             PixelsPerPeak = 1;
             SpacerPixels = 0;
             BackgroundColor = Color.Beige;
+            ImageType = RenderImageType.Bitmap;
         }
 
         // for display purposes only
@@ -24,6 +25,7 @@ namespace NAudio.WaveFormRenderer
         public int BottomHeight { get; set; }
         public int PixelsPerPeak { get; set; }
         public int SpacerPixels { get; set; }
+        public RenderImageType ImageType { get; set; }
         public virtual Pen TopPeakPen { get; set; }
         public virtual Pen TopSpacerPen { get; set; }
         public virtual Pen BottomPeakPen { get; set; }
