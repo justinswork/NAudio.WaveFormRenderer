@@ -1,0 +1,90 @@
+﻿<Window x:Class="WaveformRenderer_NetCore.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WaveformRenderer_NetCore" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+		mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		<Grid Margin="8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<Button Content="Load Audio" Width="100" Margin="4" Command="{Binding LoadAudioCommand}"/>
+			<StackPanel Margin="4" Orientation="Horizontal" Grid.Column="1">
+				<TextBlock Text="Peak Calculation Strategy" VerticalAlignment="Center"/>
+				<ComboBox Width="150" Margin="4" ItemsSource="{Binding PeakStrategies}" SelectedItem="{Binding SelectedPeakStrategy}"/>
+			</StackPanel>
+			<CheckBox VerticalAlignment="Center" Content="Decibels" IsChecked="{Binding UseDecibels}" Grid.Column="2"/>
+			<Button Margin="4" Content="Refresh Image" Grid.Column="3" Command="{Binding RefreshCommand}" Width="100"/>
+		</Grid>
+		<Grid Grid.Row="1" Margin="8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<StackPanel Orientation="Horizontal" Margin="4">
+				<TextBlock Text="Image Width" VerticalAlignment="Center" Margin="4"/>
+				<TextBox Text="{Binding ImageWidth}" Width="100" Margin="4"/>
+			</StackPanel>
+			<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4">
+				<TextBlock Text="Block Size" VerticalAlignment="Center" Margin="4"/>
+				<TextBox Text="{Binding BlockSize}" Width="100" Margin="4"/>
+			</StackPanel>
+			<StackPanel Grid.Column="2" Orientation="Horizontal">
+				<TextBlock Text="Rendering Style" VerticalAlignment="Center"/>
+				<ComboBox ItemsSource="{Binding RenderingStyles}" SelectedItem="{Binding SelectedRenderStyle}" DisplayMemberPath="Name" Width="150" VerticalAlignment="Center" Margin="4"/>
+			</StackPanel>
+			<Button Grid.Column="3" Content="Save" Margin="4" Width="100" Command="{Binding SaveCommand}"/>
+		</Grid>
+		<Grid Grid.Row="2" Margin="8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="Top Color" VerticalAlignment="Center"/>
+				<xctk:ColorPicker SelectedColor="{Binding TopColor}" Width="100" Margin="4"/>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal" Grid.Column="1">
+				<TextBlock Text="Top Height" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding TopHeight}" Width="100" Margin="4"/>
+			</StackPanel>
+		</Grid>
+		<Grid Grid.Row="3" Margin="8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<StackPanel Orientation="Horizontal" Margin="4">
+				<TextBlock Text="Bottom Color" VerticalAlignment="Center"/>
+				<xctk:ColorPicker SelectedColor="{Binding BottomColor}" Width="100" Margin="4"/>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal" Grid.Column="1" Margin="4">
+				<TextBlock Text="Bottom Height" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding BottomHeight}" Width="100" Margin="4"/>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal" Grid.Column="2" Margin="4">
+				<TextBlock Text="Background Image" VerticalAlignment="Center"/>
+				<Button Content="Load" Width="100" Margin="4" Command="{Binding LoadBackgroundImageCommand}"/>
+			</StackPanel>
+		</Grid>
+		<Grid Grid.Row="4">
+			<Image Source="{Binding ImageSource}"/>
+		</Grid>
+	</Grid>
+</Window>
