@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -31,7 +32,7 @@ namespace WaveformRenderer_NetCore
 			DataContext = this;
 			waveFormRenderer = new WaveFormRenderer();
 
-			standardSettings = new StandardWaveFormRendererSettings() { Name = "Standard" };
+			standardSettings = new StandardWaveFormRendererSettings() { Name = "Standard", BackgroundColor = Color.Transparent };
 			var soundcloudOriginalSettings = new SoundCloudOriginalSettings() { Name = "SoundCloud Original" };
 
 			var soundCloudLightBlocks = new SoundCloudBlockWaveFormSettings(Color.FromArgb(102, 102, 102), Color.FromArgb(103, 103, 103), Color.FromArgb(179, 179, 179),
@@ -68,9 +69,10 @@ namespace WaveformRenderer_NetCore
 				BackgroundColor = Color.Transparent
 			};
 
-
-			BottomColor = System.Windows.Media.Color.FromArgb(standardSettings.BottomPeakPen.Color.A, standardSettings.BottomPeakPen.Color.R, standardSettings.BottomPeakPen.Color.G, standardSettings.BottomPeakPen.Color.B);
-			TopColor = System.Windows.Media.Color.FromArgb(standardSettings.TopPeakPen.Color.A, standardSettings.TopPeakPen.Color.R, standardSettings.TopPeakPen.Color.G, standardSettings.TopPeakPen.Color.B);
+			_selectedImageType = standardSettings.ImageType;
+			ImageTypes.Add(RenderImageType.Bitmap);
+			ImageTypes.Add(RenderImageType.Vector);
+			
 			PeakStrategies.Add("Max Absolute Value");
 			PeakStrategies.Add("Max Rms Value");
 			PeakStrategies.Add("Sampled Peaks");
@@ -85,7 +87,12 @@ namespace WaveformRenderer_NetCore
 			RenderingStyles.Add(soundCloudOrangeTransparentBlocks);
 			RenderingStyles.Add(soundCloudGrayTransparentBlocks);
 
-			SelectedRenderStyle = RenderingStyles[5];
+			SelectedRenderStyle = RenderingStyles[0];
+
+			var bottomPenColor = standardSettings.BottomPeakPen.Color;
+			BottomColor = System.Windows.Media.Color.FromArgb(bottomPenColor.A, bottomPenColor.R, bottomPenColor.G, bottomPenColor.B);
+			var topPenColor = standardSettings.TopPeakPen.Color;
+			TopColor = System.Windows.Media.Color.FromArgb(topPenColor.A, topPenColor.R, topPenColor.G, topPenColor.B);
 
 			IsRendering = false;
 
@@ -114,10 +121,13 @@ namespace WaveformRenderer_NetCore
 			SaveCommand = new SimpleCommand(() =>
 			{
 				var sfd = new SaveFileDialog();
-				sfd.Filter = "PNG files|*.png";
+				if (SelectedImageType == RenderImageType.Bitmap)
+					sfd.Filter = "PNG files|*.png";
+				else
+					sfd.Filter = "EMF files|*.emf";
 				if (sfd.ShowDialog(this) == true)
 				{
-					//pictureBox1.Image.Save(sfd.FileName);
+					_image.Save(sfd.FileName);
 				}
 			});
 		}
@@ -130,9 +140,9 @@ namespace WaveformRenderer_NetCore
 			set
 			{
 				_bottomColor = value;
-				standardSettings.BottomPeakPen = new Pen(Color.FromArgb(value.A, value.R, value.G, value.B));
 				RenderWaveform();
 				OnPropertyChanged();
+				standardSettings.BottomPeakPen = new Pen(Color.FromArgb(BottomColor.A, BottomColor.R, BottomColor.G, BottomColor.B));
 			}
 		}
 
@@ -144,9 +154,9 @@ namespace WaveformRenderer_NetCore
 			set 
 			{ 
 				_topColor = value;
-				standardSettings.TopPeakPen = new Pen(Color.FromArgb(value.A, value.R, value.G, value.B));
 				RenderWaveform();
 				OnPropertyChanged();
+				standardSettings.TopPeakPen = new Pen(Color.FromArgb(TopColor.A, TopColor.R, TopColor.G, TopColor.B));
 			}
 		}
 
@@ -165,8 +175,16 @@ namespace WaveformRenderer_NetCore
 		public WaveFormRendererSettings SelectedRenderStyle
 		{
 			get { return _selectedRenderStyle; }
-			set { _selectedRenderStyle = value; RenderWaveform(); OnPropertyChanged(); }
+			set 
+			{ 
+				_selectedRenderStyle = value;
+				RenderWaveform();
+				OnPropertyChanged();
+				OnPropertyChanged(nameof(StandardSettings));
+			}
 		}
+
+		public bool StandardSettings => SelectedRenderStyle == standardSettings;
 
 		private bool _isRendering;
 
@@ -220,6 +238,8 @@ namespace WaveformRenderer_NetCore
 		}
 
 
+		private Image _image;
+
 		private System.Windows.Media.ImageSource? _imageSource;
 
 		public System.Windows.Media.ImageSource? ImageSource
@@ -228,6 +248,15 @@ namespace WaveformRenderer_NetCore
 			set { _imageSource = value; OnPropertyChanged(); }
 		}
 
+		private RenderImageType _selectedImageType;
+
+		public RenderImageType SelectedImageType
+		{
+			get { return _selectedImageType; }
+			set { _selectedImageType = value; OnPropertyChanged(); RenderWaveform(); }
+		}
+
+		public ObservableCollection<RenderImageType> ImageTypes { get; } = new ObservableCollection<RenderImageType>();
 		public ICommand LoadAudioCommand { get; }
 		public ICommand LoadBackgroundImageCommand { get; }
 		public ICommand RefreshCommand { get; }
@@ -240,6 +269,7 @@ namespace WaveformRenderer_NetCore
 			settings.BottomHeight = BottomHeight;
 			settings.Width = ImageWidth;
 			settings.DecibelScale = UseDecibels;
+			settings.ImageType = SelectedImageType;
 			return settings;
 		}
 
@@ -261,6 +291,7 @@ namespace WaveformRenderer_NetCore
 		private void RenderWaveform()
 		{
 			if (selectedFile == null) return;
+			if (IsRendering) return;
 			var settings = GetRendererSettings();
 			if (imageFile != null)
 			{
@@ -300,14 +331,14 @@ namespace WaveformRenderer_NetCore
 		{
 			using (MemoryStream memory = new MemoryStream())
 			{
-				bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+				_image = bitmap;
+				bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
 				memory.Position = 0;
 				BitmapImage bitmapimage = new BitmapImage();
 				bitmapimage.BeginInit();
 				bitmapimage.StreamSource = memory;
 				bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
 				bitmapimage.EndInit();
-
 				return bitmapimage;
 			}
 		}
